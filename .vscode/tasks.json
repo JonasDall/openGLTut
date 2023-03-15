@@ -10,6 +10,8 @@
 				"-I../libs",
 				"-g",
 				"..\\libs\\gl\\glad.c",
+				"..\\libs\\glWrapper\\glWrapper.cpp",
+				"..\\libs\\stb\\stb.cpp",
 				"${file}",
 				"-o",
 				"${fileDirname}\\${fileBasenameNoExtension}.exe",
