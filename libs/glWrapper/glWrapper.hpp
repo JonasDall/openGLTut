@@ -21,4 +21,14 @@ namespace glWrap
         void SetInt(const std::string &name, int value) const;
         void SetFloat(const std::string &name, float value) const;
     };
+
+    class Texture2D
+    {
+        public:
+        unsigned int m_ID;
+
+        Texture2D(std::string image, bool flip, GLenum filter, GLenum desiredChannels);
+
+        void SetActive(unsigned int unit);
+    };
 }

@@ -1,4 +1,9 @@
 #include "glWrapper.hpp"
+#include "../stb//stb_image.h"
+
+// 
+// *SHADER
+// 
 
 static std::string ExtractFile(std::string path) // Extracts the contents of a file to a string
 {
@@ -86,4 +91,55 @@ void glWrap::Shader::SetInt(const std::string &name, int value) const{
 
 void glWrap::Shader::SetFloat(const std::string &name, float value) const{
     glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value);
+}
+
+// 
+// *TEXTURE
+// 
+
+static GLenum GetChannelType(unsigned int channels){
+    switch(channels)
+    {
+        case 1:
+        return GL_RED;
+
+        case 2:
+        return GL_RG;
+
+        case 3:
+        return GL_RGB;
+
+        case 4:
+        return GL_RGBA;
+    }
+
+    return GL_RGB;
+}
+
+glWrap::Texture2D::Texture2D(std::string image, bool flip, GLenum filter, GLenum desiredChannels){
+    stbi_set_flip_vertically_on_load(flip);
+    int width, height, channels;
+    unsigned char *data = stbi_load(image.c_str(), &width, &height, &channels, 0);
+
+    // std::cout << channels << " channels\n";
+
+    glGenTextures(1, &m_ID);
+    glBindTexture(GL_TEXTURE_2D, m_ID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, desiredChannels, width, height, 0, GetChannelType(channels), GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else std::cout << "Texture not loaded correctly\n";
+
+    stbi_image_free(data);
+}
+
+void glWrap::Texture2D::SetActive(unsigned int unit){
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, m_ID);
 }

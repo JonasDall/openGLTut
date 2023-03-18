@@ -59,25 +59,9 @@ int main()
         return -1;
     }
 
-    int width, height, channels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *texData = stbi_load("assets/Title.png", &width, &height, &channels, 0);
+    glWrap::Texture2D texture1("assets/IdleMan.png", true, GL_NEAREST, GL_RGBA);
+    glWrap::Texture2D texture2("assets/RunningMan.png", true, GL_NEAREST, GL_RGBA);
 
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    if(texData)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
-        glGenerateMipmap(GL_TEXTURE_2D);    
-    }
-    else
-    {
-        std::cout << "Texture not loaded!\n";
-    }
-
-    stbi_image_free(texData);
 
     glWrap::Shader shader("src/vertex.glsl", "src/fragment.glsl");
 
@@ -105,6 +89,10 @@ int main()
 
     // std::cout << glGetError() << '\n';
 
+    shader.Use();
+    shader.SetInt("texture1", 0);
+    shader.SetInt("texture2", 1);
+
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -112,9 +100,14 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
+        texture1.SetActive(0);
+        texture2.SetActive(1);
+
+        float mixValue = sin(glfwGetTime());
 
         shader.Use();
+
+        shader.SetFloat("mix1", mixValue);
 
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
