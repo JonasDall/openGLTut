@@ -7,13 +7,23 @@
 #include "../libs/gl/glfw3.h"
 #include "../libs/glWrapper/glWrapper.hpp"
 #include "../libs/stb/stb_image.h"
+#include "../libs/glm/glm.hpp"
+#include "../libs/glm/gtc/matrix_transform.hpp"
+#include "../libs/glm/gtc/type_ptr.hpp"
+
+float deltaTime = 0.0f; // Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 float verts[]{
      //Location      //color        //coord
-    -1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-    -1.0,  1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-     1.0, -1.0, 0.0, 0.0, 0.0, 0.1, 1.0, 0.0,
-     1.0,  1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0
+    -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+    -0.5,  0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+     0.5, -0.5, 0.0, 0.0, 0.0, 0.1, 1.0, 0.0,
+     0.5,  0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0
 };
 
 unsigned int inds[]{
@@ -32,6 +42,19 @@ void processInput(GLFWwindow* window)
     {
         glfwSetWindowShouldClose(window, true);
     }
+
+    const float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) *
+    cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) *
+    cameraSpeed;
+
 }
 
 int main()
@@ -61,7 +84,6 @@ int main()
 
     glWrap::Texture2D texture1("assets/IdleMan.png", true, GL_NEAREST, GL_RGBA);
     glWrap::Texture2D texture2("assets/RunningMan.png", true, GL_NEAREST, GL_RGBA);
-
 
     glWrap::Shader shader("src/vertex.glsl", "src/fragment.glsl");
 
@@ -93,9 +115,14 @@ int main()
     shader.SetInt("texture1", 0);
     shader.SetInt("texture2", 1);
 
+    glm::mat4 model{1.0f};
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
+
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.f / 600.f, 0.1f, 100.f);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -104,10 +131,24 @@ int main()
         texture2.SetActive(1);
 
         float mixValue = sin(glfwGetTime());
+        
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
+        glm::mat4 view = glm::mat4(1.0);
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+ 
         shader.Use();
 
         shader.SetFloat("mix1", mixValue);
+
+        shader.SetMatrix4("model", model);
+        shader.SetMatrix4("view", view);
+        shader.SetMatrix4("projection", projection);
+
+        // unsigned int transLoc = glGetUniformLocation(shader.m_ID, "transform");
+        // glUniformMatrix4fv(transLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
