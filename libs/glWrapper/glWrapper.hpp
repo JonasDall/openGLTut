@@ -9,6 +9,7 @@
 #include "../libs/glm/glm.hpp"
 #include "../libs/glm/gtc/matrix_transform.hpp"
 #include "../libs/glm/gtc/type_ptr.hpp"
+#include "../libs/tinygltf/tinygltf.hpp"
 
 namespace glWrap
 {
@@ -48,5 +49,16 @@ namespace glWrap
     class Camera
     {
         
+    };
+
+    class Model
+    {
+    public:
+        unsigned int    m_vbo;
+        float*          m_vertexPositionBuffer;
+        float*          m_vertexNormalBuffer;
+        float*          m_VertexTexcoordBuffer;
+        unsigned int*   m_indices;
+        unsigned int*   m_material;
     };
 }
