@@ -6,7 +6,8 @@
 #include "../libs/gl/glad.h"
 #include "../libs/gl/glfw3.h"
 #include "../libs/glWrapper/glWrapper.hpp"
-#include "../libs/stb/stb_image.h"
+#include "../libs/tinygltf/stb_image.h"
+#include "../libs/tinygltf/tinygltf.hpp"
 #include "../libs/glm/glm.hpp"
 #include "../libs/glm/gtc/matrix_transform.hpp"
 #include "../libs/glm/gtc/type_ptr.hpp"
@@ -82,8 +83,27 @@ int main()
         return -1;
     }
 
+    tinygltf::Model geometry;
+    tinygltf::TinyGLTF loader;
+    std::string error{};
+    std::string warning{};
+
+    // bool ret = loader.LoadBinaryFromFile(&geometry, &error, &warning, "assets/tower.glb");
+    bool ret = loader.LoadASCIIFromFile(&geometry, &error, &warning, "assets/Cubes.gltf");
+
+    std::cout << error << '\n' << warning << '\n' << ret << '\n';
+
+    int accessor = geometry.meshes[0].primitives[0].attributes.at("POSITION");
+    int accessor2 = geometry.meshes[0].primitives[0].indices;
+
+    int bufferview = geometry.accessors[accessor].bufferView;
+    int bufferview2 = geometry.accessors[accessor2].bufferView;
+
+    int bytelength = geometry.bufferViews[bufferview].byteLength;
+
+    std::cout << bufferview;
+
     glWrap::Texture2D texture1("assets/IdleMan.png", true, GL_NEAREST, GL_RGBA);
-    glWrap::Texture2D texture2("assets/RunningMan.png", true, GL_NEAREST, GL_RGBA);
 
     glWrap::Shader shader("src/vertex.glsl", "src/fragment.glsl");
 
@@ -94,7 +114,7 @@ int main()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, geometry.bufferViews[bufferview].byteLength, &geometry.buffers[0].data.at(0), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(inds), inds, GL_STATIC_DRAW);
@@ -103,8 +123,6 @@ int main()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER ,0);
     glBindVertexArray(0);
@@ -113,7 +131,6 @@ int main()
 
     shader.Use();
     shader.SetInt("texture1", 0);
-    shader.SetInt("texture2", 1);
 
     glm::mat4 model{1.0f};
     model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -128,7 +145,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         texture1.SetActive(0);
-        texture2.SetActive(1);
 
         float mixValue = sin(glfwGetTime());
         
