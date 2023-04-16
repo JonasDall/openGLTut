@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <array>
+#include <vector>
 
 #include "../gl/glad.h"
 #include "../libs/glm/glm.hpp"
@@ -46,19 +47,37 @@ namespace glWrap
         void SetActive(unsigned int unit);
     };
 
-    class Camera
-    {
+    class Camera{
         
     };
 
-    class Model
-    {
+    class Primitive{
     public:
-        unsigned int    m_vbo;
-        float*          m_vertexPositionBuffer;
-        float*          m_vertexNormalBuffer;
-        float*          m_VertexTexcoordBuffer;
-        unsigned int*   m_indices;
-        unsigned int*   m_material;
+        std::vector<float>          m_vertices;
+        std::vector<unsigned int>   m_indices;
+        Shader*                     m_shader;
+    };
+
+    class Mesh{
+    public:
+        std::string                 m_name;
+        std::vector<Primitive>      m_primitives;
+
+        Mesh() = default;
+        Mesh(std::vector<Primitive> primitives, std::string name);
+    };
+    
+    class Model{
+    public:
+        std::vector<Mesh>           m_meshes;
+
+        Model() = default;
+        Model(std::string path);
+
+        bool LoadModel(std::string path);
+        bool ParseVertexData();
+        bool ParseIndexData();
+        bool ParseMaterialData();
+
     };
 }
